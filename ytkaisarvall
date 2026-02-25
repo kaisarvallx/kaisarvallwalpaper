@@ -1,0 +1,124 @@
+#!/bin/bash
+
+# ===== CONFIG =====
+PTERO="/var/www/pterodactyl"
+CUSTOM="$PTERO/public/custom"
+LAYOUT="$PTERO/resources/views/layouts/app.blade.php"
+
+# ===== WARNA =====
+RED="\e[31m"
+GREEN="\e[32m"
+YELLOW="\e[33m"
+CYAN="\e[36m"
+MAGENTA="\e[35m"
+NC="\e[0m"
+
+# ===== LOADING ANIM =====
+function loading() {
+echo -ne "${CYAN}Loading"
+for i in {1..5}; do
+  echo -n "."
+  sleep 0.3
+done
+echo -e "${NC}"
+}
+
+# ===== BANNER =====
+function banner() {
+clear
+echo -e "${MAGENTA}"
+echo "==============================================="
+echo "  HALOO, TERIMAKASIH TELAH MENGGUNAKAN BASH VALL"
+echo "  JANGAN LUPA SUPPORT YT KAISAR VALL"
+echo "==============================================="
+echo -e "${NC}"
+echo "[ 1 ] Add Wallpaper"
+echo "[ 2 ] Delete Wallpaper"
+echo "[ 3 ] Thanks To"
+echo "[ 4 ] Exit"
+echo ""
+}
+
+# ===== ADD WALLPAPER =====
+function add_wallpaper() {
+read -p "Masukkan URL wallpaper (.jpg): " IMG
+
+if [[ ! "$IMG" =~ \.jpg$ ]]; then
+  echo -e "${RED}Harus format .jpg${NC}"
+  sleep 1
+  return
+fi
+
+mkdir -p $CUSTOM
+loading
+curl -L "$IMG" -o $CUSTOM/bg.jpg
+
+cat > $CUSTOM/custom.css << 'EOF'
+body {
+    background: url('/custom/bg.jpg') no-repeat center center fixed !important;
+    background-size: cover !important;
+}
+body::after {
+    content: "YOUTUBE KAISAR VALL";
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    font-size: 40px;
+    color: rgba(255,255,255,0.15);
+    font-weight: bold;
+    pointer-events: none;
+}
+EOF
+
+if ! grep -q "custom.css" "$LAYOUT"; then
+    sed -i '/<\/head>/i \<link rel="stylesheet" href="\/custom\/custom.css">\n<title>Modification by Vall<\/title>' "$LAYOUT"
+fi
+
+cd $PTERO
+php artisan view:clear
+php artisan cache:clear
+
+echo -e "${GREEN}✔ Wallpaper berhasil ditambahkan!${NC}"
+sleep 1
+}
+
+# ===== DELETE WALLPAPER =====
+function delete_wallpaper() {
+rm -rf $CUSTOM
+sed -i '/custom\/custom.css/d' "$LAYOUT"
+sed -i '/Modification by Vall/d' "$LAYOUT"
+cd $PTERO
+php artisan view:clear
+php artisan cache:clear
+echo -e "${YELLOW}✔ Wallpaper berhasil dihapus!${NC}"
+sleep 1
+}
+
+# ===== THANKS TO =====
+function thanks_to() {
+clear
+echo -e "${CYAN}"
+echo "=========== Thanks To ==========="
+echo "kaisar vall"
+echo "#developer"
+echo "vanilla"
+echo "#best friend"
+echo "zenn"
+echo "#best friend"
+echo "================================="
+echo -e "${NC}"
+read -p "Tekan Enter untuk kembali..."
+}
+
+# ===== MAIN LOOP =====
+while true; do
+banner
+read -p "Pilih menu: " choice
+case $choice in
+  1) add_wallpaper ;;
+  2) delete_wallpaper ;;
+  3) thanks_to ;;
+  4) echo -e "${CYAN}Keluar dari Bash Vall...${NC}"; exit 0 ;;
+  *) echo -e "${RED}Pilihan tidak valid!${NC}"; sleep 1 ;;
+esac
+done
